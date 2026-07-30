@@ -1,0 +1,19 @@
+# Frontend dependencies and build output
+ResearchMind-frontend/node_modules/
+ResearchMind-frontend/dist/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
