@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: researchmind-server
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:researchmind}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:researchmind}
+    password: ${MYSQL_PASSWORD}
+    hikari:
+      connection-timeout: 10000
+      validation-timeout: 3000
+      maximum-pool-size: 10
+      minimum-idle: 2
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 3s
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 52MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+researchmind:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: 2h
+    remember-expiration: 7d
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+    access-key: ${MINIO_ROOT_USER}
+    secret-key: ${MINIO_ROOT_PASSWORD}
+    bucket: ${MINIO_BUCKET:researchmind-papers}
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+    proxy-url: ${DEEPSEEK_PROXY_URL:}
+    connect-timeout: 15s
+    read-timeout: 3m
+  password-reset:
+    enabled: ${PASSWORD_RESET_ENABLED:false}
+    expiration: 15m
+    frontend-url: ${PASSWORD_RESET_FRONTEND_URL:http://localhost:5173/login}
+    from-email: ${PASSWORD_RESET_FROM_EMAIL:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ResearchMind Server
+    version: 1.0.0
+    description: 智能科研文献管理平台后端服务
+
+logging:
+  level:
+    root: INFO
+    cn.researchmind: DEBUG
