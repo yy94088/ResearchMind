@@ -13,9 +13,9 @@
 
   <groupId>cn.researchmind</groupId>
   <artifactId>researchmind-server</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>3.0.0</version>
   <name>ResearchMind Server</name>
-  <description>ResearchMind 智能科研文献管理平台后端服务</description>
+  <description>ResearchMind-智能科研文献管理与分析平台后端服务</description>
 
   <properties>
     <java.version>17</java.version>

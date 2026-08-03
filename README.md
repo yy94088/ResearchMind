@@ -1,6 +1,6 @@
-# ResearchMind 智能科研文献管理平台
+# ResearchMind-智能科研文献管理与分析平台 V3.0.0
 
-ResearchMind 是一套面向科研人员的文献管理与知识发现系统。本仓库包含 Vue 3 前端、Spring Boot 3.5 后端、MySQL 8、Redis 7 和 MinIO 对象存储，核心功能已经接通真实后端。
+ResearchMind-智能科研文献管理与分析平台是一套面向科研人员的文献管理与知识发现系统。本仓库包含 Vue 3 前端、Spring Boot 3.5 后端、MySQL 8、Redis 7 和 MinIO 对象存储，核心功能已经接通真实后端。
 
 ## 已实现功能
 

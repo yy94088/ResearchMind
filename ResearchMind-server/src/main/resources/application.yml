@@ -76,8 +76,8 @@ management:
 info:
   app:
     name: ResearchMind Server
-    version: 1.0.0
-    description: 智能科研文献管理平台后端服务
+    version: 3.0.0
+    description: ResearchMind-智能科研文献管理与分析平台后端服务
 
 logging:
   level:
