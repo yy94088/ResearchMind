@@ -106,7 +106,10 @@
       <el-form v-if="editForm" :model="editForm" label-position="top">
         <el-form-item label="原始标题"><el-input v-model="editForm.title" /></el-form-item>
         <el-form-item label="中文译名（可选）"><el-input v-model="editForm.titleZh" /></el-form-item>
+        <el-form-item label="作者（用逗号分隔）"><el-input v-model="editForm.authorsText" /></el-form-item>
+        <el-form-item label="作者机构 / 单位（每行一个）"><el-input v-model="editForm.institutionsText" type="textarea" :rows="2" /></el-form-item>
         <div class="edit-grid"><el-form-item label="主研究领域"><el-select v-model="editForm.area" style="width:100%"><el-option v-for="area in areaOptions" :key="area" :label="area" :value="area" /></el-select></el-form-item><el-form-item label="年份"><el-input-number v-model="editForm.year" :min="1900" :max="2100" style="width:100%" /></el-form-item></div>
+        <div class="edit-grid"><el-form-item label="期刊 / 会议"><el-input v-model="editForm.journal" /></el-form-item><el-form-item label="DOI"><el-input v-model="editForm.doi" /></el-form-item></div>
         <el-form-item label="关联研究领域（可多选）"><el-select v-model="editForm.relatedAreas" multiple filterable collapse-tags style="width:100%"><el-option v-for="area in relatedEditAreaOptions" :key="area" :label="area" :value="area" /></el-select></el-form-item>
         <el-form-item label="关键词（保持论文原文语言，逗号分隔）"><el-input v-model="editForm.tagsText" /></el-form-item>
         <el-form-item label="摘要"><el-input v-model="editForm.abstract" type="textarea" :rows="4" /></el-form-item>
@@ -154,7 +157,7 @@ const hasFilters = computed(() => Boolean(query.value || areaFilter.value || yea
 const filteredPapers = computed(() => {
   const normalized = query.value.trim().toLowerCase()
   const result = store.papers.filter((paper) => {
-    const haystack = [paper.title, paper.titleZh, paper.doi, paper.journal, ...paper.authors, ...paper.tags].join(' ').toLowerCase()
+    const haystack = [paper.title, paper.titleZh, paper.doi, paper.journal, ...paper.authors, ...(paper.institutions || []), ...paper.tags].join(' ').toLowerCase()
     const stateMatch = !stateFilter.value
       || (stateFilter.value === 'favorite' && paper.favorite)
       || (stateFilter.value === 'read' && paper.read)
@@ -219,6 +222,8 @@ function handleCommand(command, paper) {
       area: areaDetails.find((area) => area.primary)?.name || paper.area || areaDetails[0].name,
       relatedAreas: areaDetails.filter((area) => !area.primary && area.name !== '未分类').map((area) => area.name),
       areaDetails,
+      authorsText: paper.authors.join(', '),
+      institutionsText: (paper.institutions || []).join('\n'),
       tagsText: paper.tags.join(', ')
     })
     editVisible.value = true
@@ -239,9 +244,13 @@ async function saveEdit() {
     await store.updatePaper(editForm.value.id, {
       titleZh: editForm.value.titleZh,
       title: editForm.value.title,
+      authors: editForm.value.authorsText.split(/[,，]/).map((item) => item.trim()).filter(Boolean),
+      institutions: editForm.value.institutionsText.split(/[\n;；]+/).map((item) => item.trim()).filter(Boolean),
       area: editForm.value.area,
       areas: selectedAreas,
       year: editForm.value.year,
+      journal: editForm.value.journal,
+      doi: editForm.value.doi,
       abstract: editForm.value.abstract,
       tags: editForm.value.tagsText.split(/[,，]/).map((item) => item.trim()).filter(Boolean)
     })

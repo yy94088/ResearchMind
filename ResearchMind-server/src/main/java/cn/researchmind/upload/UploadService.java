@@ -160,6 +160,7 @@ public class UploadService {
                 metadata.title(),
                 metadata.titleZh(),
                 metadata.authors(),
+                metadata.institutions(),
                 metadata.keywords(),
                 metadata.abstractText(),
                 metadata.doi(),

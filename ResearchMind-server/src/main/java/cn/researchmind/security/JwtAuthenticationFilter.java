@@ -3,6 +3,8 @@ package cn.researchmind.security;
 import java.io.IOException;
 import java.util.List;
 
+import cn.researchmind.auth.UserAccount;
+import cn.researchmind.auth.UserAccountRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -23,13 +25,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final TokenSessionStore tokenSessionStore;
+    private final UserAccountRepository userRepository;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            TokenSessionStore tokenSessionStore
+            TokenSessionStore tokenSessionStore,
+            UserAccountRepository userRepository
     ) {
         this.jwtService = jwtService;
         this.tokenSessionStore = tokenSessionStore;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -48,11 +53,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Claims claims = jwtService.parse(authorization.substring(BEARER_PREFIX.length()));
             String userId = claims.getSubject();
             String tokenId = claims.getId();
-            String username = claims.get("username", String.class);
-            String role = claims.get("role", String.class);
+            UserAccount currentUser = userRepository.findById(userId).orElse(null);
 
-            if (tokenSessionStore.isActive(tokenId, userId)) {
-                UserPrincipal principal = new UserPrincipal(userId, username, role);
+            if (currentUser != null
+                    && "ACTIVE".equals(currentUser.status())
+                    && tokenSessionStore.isActive(tokenId, userId)) {
+                String role = currentUser.role();
+                UserPrincipal principal = new UserPrincipal(
+                        userId,
+                        currentUser.username(),
+                        role
+                );
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 principal,

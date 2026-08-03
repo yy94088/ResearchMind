@@ -4,11 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import cn.researchmind.common.ApiException;
+import cn.researchmind.security.IssuedToken;
 import cn.researchmind.security.JwtService;
 import cn.researchmind.security.TokenSessionStore;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +67,49 @@ class AuthServiceProfileTest {
         assertThat(result.email()).isEqualTo("new@example.com");
         assertThat(result.realName()).isEqualTo("新姓名");
         assertThat(result.institution()).isEqualTo("新机构");
+    }
+
+    @Test
+    void shouldMakeFirstRegisteredUserAnAdministrator() {
+        UserAccount administrator = new UserAccount(
+                "admin-1",
+                "first_user",
+                "encoded-password",
+                "first@example.com",
+                "首位用户",
+                null,
+                null,
+                null,
+                null,
+                "ADMIN",
+                "ACTIVE",
+                LocalDateTime.of(2026, 7, 31, 10, 0)
+        );
+        when(userRepository.countUsers()).thenReturn(0);
+        when(passwordEncoder.encode("password-123")).thenReturn("encoded-password");
+        when(userRepository.findById(anyString())).thenReturn(Optional.of(administrator));
+        when(jwtService.issue(administrator, false)).thenReturn(new IssuedToken(
+                "token",
+                "token-id",
+                Instant.parse("2026-07-31T04:00:00Z")
+        ));
+
+        AuthResponse response = authService.register(new RegisterRequest(
+                "first_user",
+                "first@example.com",
+                "首位用户",
+                "password-123"
+        ));
+
+        verify(userRepository).insert(
+                anyString(),
+                eq("first_user"),
+                eq("encoded-password"),
+                eq("first@example.com"),
+                eq("首位用户"),
+                eq("ADMIN")
+        );
+        assertThat(response.user().role()).isEqualTo("ADMIN");
     }
 
     @Test

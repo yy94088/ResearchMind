@@ -46,6 +46,13 @@ public record PaperRequest(
                 String
         > authors,
 
+        @Size(max = 20, message = "机构不能超过 20 个")
+        List<
+                @NotBlank(message = "机构名称不能为空")
+                @Size(max = 300, message = "机构名称不能超过 300 个字符")
+                String
+        > institutions,
+
         @Size(max = 50, message = "标签不能超过 50 个")
         List<
                 @NotBlank(message = "标签不能为空")

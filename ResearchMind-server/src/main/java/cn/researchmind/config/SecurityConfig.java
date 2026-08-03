@@ -42,11 +42,14 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/info"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
                                 writeUnauthorized(response, request.getRequestURI(), objectMapper))
+                        .accessDeniedHandler((request, response, exception) ->
+                                writeForbidden(response, request.getRequestURI(), objectMapper))
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -72,6 +75,24 @@ public class SecurityConfig {
                 HttpServletResponse.SC_UNAUTHORIZED,
                 "UNAUTHORIZED",
                 "请先登录或提供有效的访问令牌",
+                path,
+                OffsetDateTime.now(),
+                java.util.Map.of()
+        ));
+    }
+
+    private void writeForbidden(
+            HttpServletResponse response,
+            String path,
+            ObjectMapper objectMapper
+    ) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), new ApiError(
+                HttpServletResponse.SC_FORBIDDEN,
+                "FORBIDDEN",
+                "当前账户没有执行该操作的权限",
                 path,
                 OffsetDateTime.now(),
                 java.util.Map.of()

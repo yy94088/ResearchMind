@@ -25,6 +25,10 @@ public class PdfParser {
                     + "(?=\\n\\s*(?:keywords?|key\\s*words|关键词|引言|"
                     + "(?:1|I)\\.?\\s+introduction)\\s*[:：]?|$)"
     );
+    private static final Pattern INSTITUTION_PATTERN = Pattern.compile(
+            "(?i).*(?:university|institute|laboratory|college|school of|department of|"
+                    + "academy of|hospital|大学|学院|研究所|实验室|研究院|医院).*"
+    );
 
     public ParsedPdf parse(byte[] bytes, String originalFileName) throws IOException {
         try (PDDocument document = Loader.loadPDF(bytes)) {
@@ -45,6 +49,7 @@ public class PdfParser {
                     fileBaseName(originalFileName)
             );
             List<String> authors = splitAuthors(information.getAuthor());
+            List<String> institutions = extractInstitutions(information, text);
             List<String> keywords = splitKeywords(information.getKeywords());
             String abstractText = extractAbstract(text);
             String doi = extractDoi(text);
@@ -53,6 +58,7 @@ public class PdfParser {
             return new ParsedPdf(
                     title,
                     authors,
+                    institutions,
                     keywords,
                     abstractText,
                     doi,
@@ -123,6 +129,35 @@ public class PdfParser {
         String normalized = normalizeOptional(keywordText);
         if (normalized == null) return List.of();
         return distinctValues(normalized.split("\\s*[,;，；]\\s*"), 100);
+    }
+
+    private List<String> extractInstitutions(
+            PDDocumentInformation information,
+            String text
+    ) {
+        List<String> candidates = new ArrayList<>();
+        for (String key : List.of("Institution", "Affiliation", "Organization")) {
+            String value = normalizeOptional(information.getCustomMetadataValue(key));
+            if (value != null) candidates.add(value);
+        }
+        int inspected = 0;
+        for (String line : text.split("\\n")) {
+            String value = line.trim()
+                    .replaceFirst("^[0-9*†‡,;\\s]+", "")
+                    .replaceAll("\\s{2,}", " ");
+            if (value.matches("(?i)^(abstract|摘\\s*要).*")) break;
+            if (++inspected > 80) break;
+            if (value.length() >= 4
+                    && value.length() <= 300
+                    && INSTITUTION_PATTERN.matcher(value).matches()
+                    && !value.matches("(?i).*(?:@|https?://).*")) {
+                candidates.add(value);
+            }
+        }
+        return distinctValues(candidates.toArray(String[]::new), 300)
+                .stream()
+                .limit(20)
+                .toList();
     }
 
     private List<String> distinctValues(String[] values, int maxLength) {

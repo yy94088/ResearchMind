@@ -5,6 +5,7 @@ import java.util.List;
 public record ParsedPdf(
         String title,
         List<String> authors,
+        List<String> institutions,
         List<String> keywords,
         String abstractText,
         String doi,

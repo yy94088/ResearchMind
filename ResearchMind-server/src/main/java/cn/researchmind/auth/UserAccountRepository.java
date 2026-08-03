@@ -65,25 +65,36 @@ public class UserAccountRepository {
         return result != null && result > 0;
     }
 
+    public int countUsers() {
+        Integer result = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users",
+                Map.of(),
+                Integer.class
+        );
+        return result == null ? 0 : result;
+    }
+
     public void insert(
             String id,
             String username,
             String passwordHash,
             String email,
-            String realName
+            String realName,
+            String role
     ) {
         jdbcTemplate.update("""
                 INSERT INTO users (
                     id, username, password_hash, email, real_name, role, status
                 ) VALUES (
-                    :id, :username, :passwordHash, :email, :realName, 'USER', 'ACTIVE'
+                    :id, :username, :passwordHash, :email, :realName, :role, 'ACTIVE'
                 )
                 """, Map.of(
                 "id", id,
                 "username", username,
                 "passwordHash", passwordHash,
                 "email", email,
-                "realName", realName
+                "realName", realName,
+                "role", role
         ));
     }
 

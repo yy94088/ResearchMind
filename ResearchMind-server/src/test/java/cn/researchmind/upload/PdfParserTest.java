@@ -25,6 +25,7 @@ class PdfParserTest {
 
         assertThat(result.title()).isEqualTo("ResearchMind PDF Pipeline");
         assertThat(result.authors()).containsExactly("Alice", "Bob");
+        assertThat(result.institutions()).containsExactly("ResearchMind University");
         assertThat(result.keywords()).containsExactly("PDF", "Research");
         assertThat(result.abstractText()).contains("real PDF parsing pipeline");
         assertThat(result.doi()).isEqualTo("10.2026/researchmind.001");
@@ -42,6 +43,7 @@ class PdfParserTest {
             information.setTitle("ResearchMind PDF Pipeline");
             information.setAuthor("Alice; Bob");
             information.setKeywords("PDF, Research");
+            information.setCustomMetadataValue("Institution", "ResearchMind University");
             Calendar creationDate = Calendar.getInstance();
             creationDate.set(Calendar.YEAR, 2026);
             information.setCreationDate(creationDate);

@@ -11,6 +11,7 @@ record GeneratedPaperMetadata(
         String title,
         String titleZh,
         List<String> authors,
+        List<String> institutions,
         List<String> keywords,
         @JsonProperty("abstract") String abstractText,
         String doi,

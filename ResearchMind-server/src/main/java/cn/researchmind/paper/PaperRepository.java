@@ -36,6 +36,7 @@ public class PaperRepository {
                 p.page_count,
                 DATE(p.upload_time) AS upload_date,
                 COALESCE(author_data.authors, '') AS authors,
+                COALESCE(author_data.institutions, '') AS institutions,
                 COALESCE(tag_data.tags, '') AS tags,
                 COALESCE(area_data.area, '未分类') AS area,
                 COALESCE(area_data.areas, '') AS areas,
@@ -48,7 +49,10 @@ public class PaperRepository {
             LEFT JOIN (
                 SELECT
                     pa.paper_id,
-                    GROUP_CONCAT(a.name ORDER BY pa.author_order SEPARATOR '|||') AS authors
+                    GROUP_CONCAT(a.name ORDER BY pa.author_order SEPARATOR '|||') AS authors,
+                    GROUP_CONCAT(
+                        DISTINCT a.institution ORDER BY a.institution SEPARATOR '|||'
+                    ) AS institutions
                 FROM paper_author pa
                 JOIN author a ON a.id = pa.author_id
                 GROUP BY pa.paper_id
@@ -223,7 +227,7 @@ public class PaperRepository {
     public void addAuthors(String paperId, List<String> authorNames) {
         int authorOrder = 1;
         for (String authorName : safeList(authorNames)) {
-            String authorId = findOrCreateAuthor(authorName);
+            String authorId = findOrCreateAuthor(authorName, null);
             jdbcTemplate.update("""
                     INSERT IGNORE INTO paper_author (
                         paper_id, author_id, author_order
@@ -370,8 +374,12 @@ public class PaperRepository {
         jdbcTemplate.update("DELETE FROM paper_area WHERE paper_id = :paperId", paperParameter);
 
         int authorOrder = 1;
-        for (String authorName : safeList(request.authors())) {
-            String authorId = findOrCreateAuthor(authorName);
+        List<String> authors = safeList(request.authors());
+        List<String> institutions = safeList(request.institutions());
+        for (int index = 0; index < authors.size(); index++) {
+            String authorName = authors.get(index);
+            String institution = institutionForAuthor(institutions, authors.size(), index);
+            String authorId = findOrCreateAuthor(authorName, institution);
             jdbcTemplate.update("""
                     INSERT INTO paper_author (paper_id, author_id, author_order)
                     VALUES (:paperId, :authorId, :authorOrder)
@@ -413,21 +421,31 @@ public class PaperRepository {
         }
     }
 
-    private String findOrCreateAuthor(String name) {
+    private String findOrCreateAuthor(String name, String institution) {
         String normalizedName = name.toLowerCase(Locale.ROOT);
+        String normalizedInstitution = normalizeOptional(institution);
+        MapSqlParameterSource parameters = new MapSqlParameterSource()
+                .addValue("normalizedName", normalizedName)
+                .addValue("institution", normalizedInstitution);
         Optional<String> existing = jdbcTemplate.query("""
                 SELECT id FROM author
-                WHERE normalized_name = :normalizedName AND institution IS NULL
+                WHERE normalized_name = :normalizedName
+                  AND (institution = :institution
+                       OR (institution IS NULL AND :institution IS NULL))
                 LIMIT 1
-                """, Map.of("normalizedName", normalizedName), (rs, rowNum) -> rs.getString("id"))
+                """, parameters, (rs, rowNum) -> rs.getString("id"))
                 .stream().findFirst();
         if (existing.isPresent()) return existing.get();
 
         String id = UUID.randomUUID().toString();
         jdbcTemplate.update("""
-                INSERT INTO author (id, name, normalized_name)
-                VALUES (:id, :name, :normalizedName)
-                """, Map.of("id", id, "name", name, "normalizedName", normalizedName));
+                INSERT INTO author (id, name, normalized_name, institution)
+                VALUES (:id, :name, :normalizedName, :institution)
+                """, new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("name", name)
+                .addValue("normalizedName", normalizedName)
+                .addValue("institution", normalizedInstitution));
         return id;
     }
 
@@ -470,6 +488,7 @@ public class PaperRepository {
                 resultSet.getString("title"),
                 resultSet.getString("title_zh"),
                 splitValues(resultSet.getString("authors")),
+                splitValues(resultSet.getString("institutions")),
                 getNullableInteger(resultSet, "publish_year"),
                 resultSet.getString("journal"),
                 resultSet.getString("doi"),
@@ -630,6 +649,21 @@ public class PaperRepository {
             }
         }
         return List.copyOf(uniqueValues.values());
+    }
+
+    private String institutionForAuthor(
+            List<String> institutions,
+            int authorCount,
+            int authorIndex
+    ) {
+        if (institutions.isEmpty()) return null;
+        if (institutions.size() == 1) return institutions.get(0);
+        if (institutions.size() == authorCount) return institutions.get(authorIndex);
+        if (authorCount >= institutions.size()) {
+            return authorIndex < institutions.size() ? institutions.get(authorIndex) : null;
+        }
+        if (authorIndex < authorCount - 1) return institutions.get(authorIndex);
+        return String.join("; ", institutions.subList(authorIndex, institutions.size()));
     }
 
     private String normalizeRequired(String value) {

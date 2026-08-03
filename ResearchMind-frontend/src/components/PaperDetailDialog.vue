@@ -16,6 +16,7 @@
       <dl class="meta-grid">
         <div><dt>作者</dt><dd>{{ paper.authors.join('，') }}</dd></div>
         <div><dt>发表信息</dt><dd>{{ paper.journal }} · {{ paper.year }}</dd></div>
+        <div><dt>机构</dt><dd>{{ paper.institutions?.join('，') || '暂未识别' }}</dd></div>
         <div><dt>DOI</dt><dd>{{ paper.doi || '暂未录入' }}</dd></div>
         <div><dt>导入日期</dt><dd>{{ paper.uploadDate }}</dd></div>
       </dl>

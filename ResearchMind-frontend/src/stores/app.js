@@ -303,6 +303,7 @@ export const useAppStore = defineStore('app', () => {
       fileName: paper.fileName || null,
       pages: paper.pages || 0,
       authors: paper.authors || [],
+      institutions: paper.institutions || [],
       tags: paper.tags || [],
       area: primaryArea,
       areas: normalizedAreas,

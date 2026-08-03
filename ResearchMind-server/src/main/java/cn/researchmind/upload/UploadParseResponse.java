@@ -13,6 +13,7 @@ public record UploadParseResponse(
         String title,
         String titleZh,
         List<String> authors,
+        List<String> institutions,
         List<String> tags,
         @JsonProperty("abstract") String abstractText,
         String doi,

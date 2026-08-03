@@ -119,7 +119,12 @@ const navGroups = computed(() => [
   },
   {
     title: '账户',
-    items: [{ to: '/profile', icon: 'settings', label: '个人设置' }]
+    items: [
+      { to: '/profile', icon: 'settings', label: '个人设置' },
+      ...(store.profile.roleCode === 'ADMIN'
+        ? [{ to: '/admin', icon: 'users', label: '系统管理' }]
+        : [])
+    ]
   }
 ])
 

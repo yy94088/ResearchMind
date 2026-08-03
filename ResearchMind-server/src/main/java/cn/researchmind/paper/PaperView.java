@@ -11,6 +11,7 @@ public record PaperView(
         String title,
         String titleZh,
         List<String> authors,
+        List<String> institutions,
         Integer year,
         String journal,
         String doi,

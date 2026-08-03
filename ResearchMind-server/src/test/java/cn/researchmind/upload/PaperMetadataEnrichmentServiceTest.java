@@ -40,6 +40,7 @@ class PaperMetadataEnrichmentServiceTest {
         ParsedPdf parsed = new ParsedPdf(
                 "Reliable Local Title",
                 List.of("Alice"),
+                List.of(),
                 List.of("Graph Learning"),
                 "",
                 "10.1000/local",
@@ -51,6 +52,7 @@ class PaperMetadataEnrichmentServiceTest {
                 .thenReturn("""
                         The core method is a graph neural network.
                         The model integrates a large language model.
+                        ResearchMind University
                         """);
         when(deepSeekClient.completeJson(anyString(), anyString(), anyString()))
                 .thenReturn(new DeepSeekCompletion("""
@@ -58,6 +60,7 @@ class PaperMetadataEnrichmentServiceTest {
                           "title": "AI Replacement",
                           "titleZh": "可靠的本地标题",
                           "authors": ["Wrong Author"],
+                          "institutions": ["ResearchMind University", "Invented Institute"],
                           "keywords": ["Wrong Keyword"],
                           "abstract": "论文摘要",
                           "doi": "10.1000/wrong",
@@ -80,6 +83,7 @@ class PaperMetadataEnrichmentServiceTest {
 
         assertThat(result.title()).isEqualTo("Reliable Local Title");
         assertThat(result.authors()).containsExactly("Alice");
+        assertThat(result.institutions()).containsExactly("ResearchMind University");
         assertThat(result.keywords()).containsExactly("Graph Learning");
         assertThat(result.doi()).isEqualTo("10.1000/local");
         assertThat(result.titleZh()).isEqualTo("可靠的本地标题");
@@ -100,7 +104,7 @@ class PaperMetadataEnrichmentServiceTest {
                 )
         );
         assertThat(result.aiEnrichedFields())
-                .contains("中文标题", "摘要", "发表年份", "期刊 / 会议", "研究领域")
+                .contains("中文标题", "摘要", "发表年份", "期刊 / 会议", "研究领域", "机构")
                 .doesNotContain("作者", "关键词", "DOI", "原始标题");
     }
 
@@ -108,6 +112,7 @@ class PaperMetadataEnrichmentServiceTest {
     void shouldKeepLocalResultWhenAiIsNotConfigured() {
         ParsedPdf parsed = new ParsedPdf(
                 "Local Title",
+                List.of(),
                 List.of(),
                 List.of(),
                 "",
@@ -138,6 +143,7 @@ class PaperMetadataEnrichmentServiceTest {
     void shouldRejectAreaOutsideSupportedTaxonomy() throws Exception {
         ParsedPdf parsed = new ParsedPdf(
                 "Local Title",
+                List.of(),
                 List.of(),
                 List.of(),
                 "",
@@ -176,6 +182,7 @@ class PaperMetadataEnrichmentServiceTest {
     void shouldSkipAiWhenUserDisablesEnrichment() {
         ParsedPdf parsed = new ParsedPdf(
                 "Local Title",
+                List.of(),
                 List.of(),
                 List.of(),
                 "",

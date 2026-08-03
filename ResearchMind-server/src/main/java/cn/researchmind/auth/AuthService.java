@@ -60,7 +60,8 @@ public class AuthService {
                 username,
                 passwordEncoder.encode(request.password()),
                 email,
-                realName
+                realName,
+                userRepository.countUsers() == 0 ? "ADMIN" : "USER"
         );
 
         UserAccount user = requireUser(userId);

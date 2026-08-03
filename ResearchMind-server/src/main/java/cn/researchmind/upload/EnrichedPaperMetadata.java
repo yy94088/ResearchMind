@@ -8,6 +8,7 @@ public record EnrichedPaperMetadata(
         String title,
         String titleZh,
         List<String> authors,
+        List<String> institutions,
         List<String> keywords,
         String abstractText,
         String doi,
